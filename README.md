@@ -24,7 +24,7 @@ First, create a virtual environment to isolate the project dependencies:
 
 ```bash
 # Create virtual environment
-python -m venv pacman_env
+python3 -m venv pacman_env
 
 # Activate virtual environment
 # On Windows:
@@ -54,7 +54,7 @@ The project has two main categories of functionality: **Experiments** and **Trai
 Run the human play experiment where you can play Pacman yourself:
 
 ```bash
-python human_play.py
+python3 human_play.py
 ```
 
 **Features:**
@@ -74,7 +74,7 @@ python human_play.py
 Watch an AI agent play Pacman with human advice:
 
 ```bash
-python agent_play.py
+python3 agent_play.py
 ```
 
 **Features:**
@@ -95,7 +95,7 @@ python agent_play.py
 Use the main script for a complete training and evaluation pipeline:
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 This script will:
@@ -110,10 +110,10 @@ If you want more control over the training process:
 
 ```bash
 # Train only
-python train_agent.py
+python3 train_agent.py
 
 # Evaluate only (requires existing model)
-python train_agent.py
+python3 train_agent.py
 ```
 
 ## Project Structure
