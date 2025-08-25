@@ -204,6 +204,44 @@ class AgentPlayMode:
         
         pygame.display.update()
     
+    def show_mode_switch_screen(self):
+        image = self.env.render()
+        image = Image.fromarray(image, 'RGB')
+        
+        image = image.resize(self.window_size, Image.Resampling.LANCZOS)
+        
+        mode, size, data = image.mode, image.size, image.tobytes()
+        pygame_image = pygame.image.fromstring(data, size, mode)
+        
+        self.display.blit(pygame_image, (0, 0))
+        
+        overlay = pygame.Surface(self.window_size)
+        overlay.set_alpha(180)
+        overlay.fill(self.BLACK)
+        self.display.blit(overlay, (0, 0))
+        
+        switch_text = "MODE CHANGE!"
+        self.draw_text(switch_text, self.font_large, self.YELLOW,
+                      (self.window_size[0]//2, self.window_size[1]//2 - 80), center=True)
+        
+        mode_text = f"Switching to {self.current_advice_mode.upper()} MODE"
+        self.draw_text(mode_text, self.font_medium, self.GREEN,
+                      (self.window_size[0]//2, self.window_size[1]//2 - 30), center=True)
+        
+        if self.current_advice_mode == "freeze":
+            description = "Freeze mode: Wait indefinitely for human advice"
+        else:
+            description = f"Countdown mode: Wait {self.countdown_seconds} seconds for advice"
+        
+        self.draw_text(description, self.font_small, self.WHITE,
+                      (self.window_size[0]//2, self.window_size[1]//2 + 10), center=True)
+        
+        instruction_text = "Press SPACE or ENTER to continue"
+        self.draw_text(instruction_text, self.font_medium, self.ORANGE,
+                      (self.window_size[0]//2, self.window_size[1]//2 + 60), center=True)
+        
+        pygame.display.update()
+    
     def draw_advice_screen(self, countdown_time=None):
         # First render the current game state as background
         image = self.env.render()
@@ -479,9 +517,44 @@ class AgentPlayMode:
             
             # if it's time to switch modes (at halfway point)
             if self.elapsed_time >= self.mode_switch_time and self.current_advice_mode == ("freeze" if self.freeze_mode_first else "countdown"):
+                # Pause the game and timer for mode switch
+                self.paused = True
+                self.pause_start_time = time.time()
+                
                 # Switch to the other mode
                 self.current_advice_mode = "countdown" if self.freeze_mode_first else "freeze"
                 print(f"\nMode switched to {self.current_advice_mode.upper()} mode at {self.elapsed_time:.1f} seconds!")
+                
+                # Show mode switch screen
+                self.show_mode_switch_screen()
+                
+                # Wait for user to continue
+                waiting = True
+                while waiting:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+                            break
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                                waiting = False
+                                break
+                            elif event.key == pygame.K_ESCAPE:
+                                running = False
+                                break
+                    
+                    if not running:
+                        break
+                    self.clock.tick(60)
+                
+                if not running:
+                    break
+                
+                # Resume the game
+                self.paused = False
+                if self.pause_start_time:
+                    self.total_pause_time += time.time() - self.pause_start_time
+                    self.pause_start_time = None
             
             # Check if it's time to ask for human advice
             if self.step_count > 0 and self.step_count % self.advice_frequency == 0:
